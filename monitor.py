@@ -64,7 +64,6 @@ def extract_data(text):
 
 def login_if_needed(page):
     page.goto(LOGIN_URL, wait_until="domcontentloaded")
-
     page.wait_for_timeout(3000)
 
     body_text = page.inner_text("body")
@@ -92,6 +91,48 @@ def get_data():
         return extract_data(text)
 
 
+def build_message(new_stock, new_amount, old_stock):
+    price_with_profit = round(float(new_amount) + 0.14, 2)
+
+    if new_stock == 0:
+        return """❌ STOCK OUT
+
+CapCut Premium is currently out of stock.
+
+Stay tuned for restock.
+"""
+
+    if old_stock == 0 and new_stock > 0:
+        return f"""🚀 STOCK IS BACK!
+
+📦 Available Stock: {new_stock} Accounts
+💰 Price: ${price_with_profit:.2f} / Account
+
+🌐 Order:
+speedboostx.com
+"""
+
+    if new_stock < 10:
+        return f"""⚠️ LOW STOCK
+
+Only {new_stock} accounts left.
+
+💰 Price: ${price_with_profit:.2f} / Account
+🌐 Order: speedboostx.com
+"""
+
+    return f"""⚡ CapCut Premium Stock Update
+
+📦 Available Stock: {new_stock} Accounts
+💰 Price: ${price_with_profit:.2f} / Account
+
+🔄 Auto Update: Every 5 Minutes
+
+🌐 Order / Website:
+speedboostx.com
+"""
+
+
 def main():
     old_data = load_old_data()
     old_stock = old_data.get("stock")
@@ -105,27 +146,11 @@ def main():
 
     if old_stock is None and old_amount is None:
         save_new_data(new_stock, new_amount)
-        send_telegram(
-            "تم بدء المراقبة\n"
-            f"Available Stock: {new_stock} accounts\n"
-            f"Total Amount: {new_amount}"
-        )
+        send_telegram(build_message(new_stock, new_amount, 0))
         return
 
-    changes = []
-
-    if new_stock != old_stock:
-        changes.append(
-            f"Available Stock changed: {old_stock} -> {new_stock} accounts"
-        )
-
-    if new_amount != old_amount:
-        changes.append(
-            f"Total Amount changed: {old_amount} -> {new_amount}"
-        )
-
-    if changes:
-        send_telegram("\n".join(changes))
+    if new_stock != old_stock or new_amount != old_amount:
+        send_telegram(build_message(new_stock, new_amount, old_stock))
         save_new_data(new_stock, new_amount)
 
 
