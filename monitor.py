@@ -95,7 +95,7 @@ def build_message(new_stock, new_amount, old_stock):
     price_with_profit = round(float(new_amount) + 0.14, 2)
 
     if new_stock == 0:
-        return """❌ STOCK OUT
+    return """❌ OUT OF STOCK
 
 CapCut Premium is currently out of stock.
 
